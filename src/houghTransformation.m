@@ -1,6 +1,7 @@
-function img = houghTransformation(originalImage, edgeImage, shouldMask, threshold)
+function img = houghTransformation(originalImage, type, sigma, shouldMask, threshold)
+    edgeImage = detectEdge(app.originalImage, type, [], sigma);    
     [rows, cols] = size(edgeImage);
-
+    
     % Masking
     if shouldMask
         mask = zeros(rows, cols);
@@ -30,7 +31,6 @@ function img = houghTransformation(originalImage, edgeImage, shouldMask, thresho
         end
     end
     
-    %[H,theta,rho] = hough(edgeImage, "RhoResolution", 0.5, "Theta", theta);
     peaks = houghpeaks(H, 6, 'Threshold', ceil(threshold * max(H(:))));
     lines = houghlines(edgeImage, theta, rho, peaks, 'FillGap', 40, 'MinLength', 70);
     
