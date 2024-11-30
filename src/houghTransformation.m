@@ -1,11 +1,12 @@
-function img = houghTransformation(originalImage, edgeImage)
+function img = houghTransformation(originalImage, edgeImage, shouldMask, threshold)
     [rows, cols] = size(edgeImage);
 
     % Masking
-    mask = zeros(rows, cols);
-    mask(floor(0.5*rows)+1:end, :) = 1;
-    edgeImage = edgeImage .* cast(mask, 'like', edgeImage);
-    %figure; imshow(edgeImage); title("Masked");
+    if shouldMask
+        mask = zeros(rows, cols);
+        mask(floor(0.5*rows)+1:end, :) = 1;
+        edgeImage = edgeImage .* cast(mask, 'like', edgeImage);
+    end
     
     theta = -75:0.25:75;
     theta_rad = deg2rad(theta); 
@@ -16,6 +17,7 @@ function img = houghTransformation(originalImage, edgeImage)
     H = zeros(length(rho), length(theta)); 
     [edge_y, edge_x] = find(edgeImage);
     
+    % Fill accumulator matrix
     for i = 1:length(edge_x)
         x = edge_x(i);
         y = edge_y(i);
@@ -28,29 +30,14 @@ function img = houghTransformation(originalImage, edgeImage)
         end
     end
     
-    peaks = houghpeaks(H, 6, 'Threshold', ceil(0.3 * max(H(:))));
+    %[H,theta,rho] = hough(edgeImage, "RhoResolution", 0.5, "Theta", theta);
+    peaks = houghpeaks(H, 6, 'Threshold', ceil(threshold * max(H(:))));
     lines = houghlines(edgeImage, theta, rho, peaks, 'FillGap', 40, 'MinLength', 70);
-
-    %figure;
-    %hold on;
     
-    img = originalImage;
     % Overlay Detected Lines on the Image
+    img = originalImage;
     for k = 1:length(lines)
         xy = [lines(k).point1; lines(k).point2];
-        
-        %{
-        % Plot the line in red
-        plot(xy(:,1), xy(:,2), 'LineWidth', 2, 'Color', 'red');
-        
-
-        % Mark the start and end points of the line
-        plot(xy(1,1), xy(1,2), 'x', 'LineWidth', 2, 'Color', 'green');
-        plot(xy(2,1), xy(2,2), 'x', 'LineWidth', 2, 'Color', 'blue');
-        %}
-
-        img = insertShape(img,"line", xy, 'ShapeColor', 'red', 'LineWidth', 5);
+        img = insertShape(img,"line", xy, 'ShapeColor', 'red', 'LineWidth', 8);
     end
-
-    %hold off;
 end
